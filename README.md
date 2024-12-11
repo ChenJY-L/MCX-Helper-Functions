@@ -1,4 +1,4 @@
-# MCX模拟程序更新日志
+# MCX模拟程序
 
 ## 🤖使用说明
 
@@ -13,6 +13,7 @@
 - [Feat] 24/12/10 更新`exportDepth2.m`，支持导出穿透深度和光程数据，并支持导出`traj`文件
 - [Feat] 24/12/10 主程序中添加并行控制开关`isuseParfeval`，支持关闭并行导出光能量和光密度
 - [BUG] 24/12/11 修复平均穿透深度计算时，使用的光能量
+- [Bug] 24/12/11 修复模型构建函数中，z维度不更新的问题
 
 ## 👾函数接口声明
 
@@ -22,8 +23,8 @@
 
 导出各检测器捕获光子(`detp`)的光能量(`energy`)，吸光度(`absorbance`)和各个介质中的平均光程(`ppath`)。
 
-- 光能量：统计被探测器捕获光子的总体重量（使用Lambert-Beer定律计算）。$w=w_0 \cdot \exp(\sum_{i=0}^n \mu_{a,i} \cdot \rm{pathlength}_i)$
-- 吸光度：$A = -ln(\frac{\sum_{detected} w}{w_0})$
+- 光能量：统计被探测器捕获光子的总体重量（使用Lambert-Beer定律计算）。$ w=w_0 \cdot \exp(\sum_{i=0}^n \mu_{a,i} \cdot \rm{pathlength}_i) $
+- 吸光度：$ A = -ln(\frac{\sum_{detected} w}{w_0}) $
 - 光程：由MCX直接导出，此处仅计算了加权平均光程。
 
 #### 使用范例

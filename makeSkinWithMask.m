@@ -1,7 +1,9 @@
-function shapes = makeSkinWithMask(vol,layers)
+function [shapes,vol] = makeSkinWithMask(vol,layers)
 %makeSkin7 此处显示有关此函数的摘要
 %   此处显示详细说明
-[gridX,gridY,gridZ] = size(vol);
+[gridX, gridY, ~] = size(vol);
+gridZ = sum(layers);
+vol = zeros([gridX, gridY, gridZ], 'uint8');
 layersZ = cumsum(layers)';
 shapes = ['{"Shapes":['...
     '{"Grid": {"Tag":0, "Size":[' num2str(gridX) ',' num2str(gridY) ',' num2str(gridZ) ']}},'...
