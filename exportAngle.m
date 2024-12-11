@@ -6,14 +6,7 @@ SDSWidth = SDSWidth/cfg.unitinmm;
 % 重新计算detid
 center = size(cfg.vol,[1,2])/2; % 计算中心点坐标 (是否需要+0.5?)
 
-pos = detp.p(:,1:2) - center;
-distance = sqrt(pos(:,1).^2 + pos(:,2).^2);
-
-for i = 1:length(SDS)
-    id = (distance >= (SDS(i) - SDSWidth/2)) & (distance < (SDS(i) + SDSWidth/2));
-    detp.detid(id) = i;
-end
-idNum = length(SDS);
+[detp, idNum] = MCXSetRingDetid(detp,center,SDS,SDSWidth);
 
 num = zeros(idNum,90);
 energyBin = zeros(idNum,90);
