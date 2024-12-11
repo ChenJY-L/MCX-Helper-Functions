@@ -127,7 +127,7 @@ for detid = 1:idNum
     
     % 计算加权平均穿透深度
     try
-        meanDepth(detid) = sum(detWeight(:).*depths(:))/sum(detWeight(:));
+        meanDepth(detid) = sum(weights(:).*depths(:))/sum(weights(:));
     catch
         meanDepth(detid) = 0; 
     end
