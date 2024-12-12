@@ -138,6 +138,7 @@ for detid = 1:idNum
             save(fullfile(savepath, ['traj-' num2str(d*cfg.unitinmm) '.mat']), "traj")
         catch
             mkdir(savepath)
+            save(fullfile(savepath, ['traj-' num2str(d*cfg.unitinmm) '.mat']), "traj")
         end
     end
 end
