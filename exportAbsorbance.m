@@ -63,4 +63,18 @@ for i = 1:idNum    % 探测器编号
         detPath(j - 1, i) = sum(ppath(detp.detid == i) .* currentWeight .* cfg.unitinmm) / energy(i);
     end
 end
+
+% 添加表头
+if exist('SDS', 'var')
+    tableHeader = arrayfun(@(x) ['检测器' num2str(x)], SDS.*cfg.unitinmm, 'UniformOutput', false);
+else
+    tableHeader = arrayfun(@(x) ['检测器' num2str(x)], 1:idNum, 'UniformOutput', false);
+end
+
+rowHeader = arrayfun(@(x) ['介质' num2str(x)], 1:size(detPath, 1), 'UniformOutput', false);
+
+energy = array2table(energy, 'VariableNames', tableHeader);
+absorbance = array2table(absorbance, 'VariableNames', tableHeader);
+detPath = array2table(detPath, 'VariableNames', tableHeader, 'RowNames', rowHeader);
+
 end
