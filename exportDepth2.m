@@ -100,18 +100,15 @@ for detid = 1:idNum
     
     depths = zeros(1, length(detp2.detid));
     weights = zeros(1, length(detp2.detid));
-    pathTraj = zeros(1, length(detp2.detid));
     parfor (i = 0:length(detp2.detid) - 1, M)
         % todo: fix guangzigeshu
         % 提取某个光子的全部运动轨迹
         pos = traj.pos(traj.id == i,:);
-        
 
         % 提取光子的最后能量
         idx = find(traj.id == i, 1, 'last');
         
         % 提取运动过程中，最大的z坐标
-        pathTraj(i+1) = sum(norm(pos(2:end, :) - pos(1:end-1, :)));
         depths(i+1) = max(pos(:,3));
         weights(i+1) = traj.data(5,idx);
     end
@@ -121,13 +118,8 @@ for detid = 1:idNum
     % 对两组weights进行排序
     % [weights, orderTraj] = sort(weights);
     % [detWeight, orderPpath] = sort(detWeight);
-    pathDetp = sum(detp2.ppath,2);
-    [dataTraj, orderTraj] = sortrows([weights;pathTraj]', [1 2]);
-    [dataDetp, orderDetp] = sortrows([detWeight, pathDetp], [1 2]);
- 
-    tmp1 = [detids; distances; depths(orderTraj); 
-        weights(orderTraj); pathTraj.*cfg.unitinmm;
-        detWeight(orderDetp)'; detp2.ppath(orderDetp, :)'.*cfg.unitinmm];
+
+    tmp1 = [detids;distances;depths;weights];
     tmp2 = [detids;distances;detWeight';detp2.ppath'.*cfg.unitinmm];
 
     out = [out, tmp1];
@@ -159,10 +151,7 @@ out = sortrows(out, [1,2]);
 
 outPPath = outPPath';
 % 添加表头
-tableHeader = {'检测器ID', 'SDS(mm)', '最大穿透深度(mm)', '光能量(traj)', '总位移(mm)', '光能量(detp)'};
-for i = 1:size(cfg.prop,1) - 1
-    tableHeader{end + 1} = ['介质', num2str(i), '(mm)'];
-end
+tableHeader = {'检测器ID', 'SDS(mm)', '最大穿透深度(mm)', '光能量(traj)'};
 out = array2table(out,"VariableNames",tableHeader);
 
 tableHeader = {'检测器ID', 'SDS(mm)', '光能量(ppath)'};
