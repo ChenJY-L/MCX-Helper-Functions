@@ -106,7 +106,6 @@ for detid = 1:idNum
         % 提取某个光子的全部运动轨迹
         pos = traj.pos(traj.id == i,:);
         
-
         % 提取光子的最后能量
         idx = find(traj.id == i, 1, 'last');
         
