@@ -22,7 +22,7 @@ function [energy, absorbance, detPath] = exportAbsorbance(cfg, detp, varargin)
 p = inputParser;
 addRequired(p, 'cfg');
 addRequired(p, 'detp');
-addOptional(p, 'SDS', [1.7, 2.0, 2.3, 2.6, 2.9]);
+addOptional(p, 'SDS', []);
 addOptional(p, 'width', 0.2);
 addOptional(p, 'center', []);  % 添加'center'为可选输入
 addOptional(p, 'mask', []);     
@@ -43,11 +43,13 @@ if ~isempty(varargin)
     if isempty(p.Results.mask)
         [detp, idNum] = MCXSetRingDetid(detp,center,SDS,SDSWidth);
     else
-        for i = 1:size(mask,3)
+        for i = 1:size(p.Results.mask,3)
             photonsInMask = getPhotonsInMask(detp.p(:,1:2), ...
                 p.Results.mask(:,:,i));
             detp.detid(photonsInMask) = i;
         end
+
+        idNum = size(p.Results.mask, 3);
     end
 else
     idNum = size(cfg.detpos,1);
@@ -73,7 +75,7 @@ for i = 1:idNum    % 探测器编号
 end
 
 % 添加表头
-if exist('SDS', 'var')
+if ~isempty(SDS)
     tableHeader = arrayfun(@(x) ['检测器' num2str(x)], SDS.*cfg.unitinmm, 'UniformOutput', false);
 else
     tableHeader = arrayfun(@(x) ['检测器' num2str(x)], 1:idNum, 'UniformOutput', false);
