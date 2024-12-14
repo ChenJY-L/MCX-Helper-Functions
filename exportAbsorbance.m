@@ -25,6 +25,7 @@ addRequired(p, 'detp');
 addOptional(p, 'SDS', [1.7, 2.0, 2.3, 2.6, 2.9]);
 addOptional(p, 'width', 0.2);
 addOptional(p, 'center', []);  % 添加'center'为可选输入
+addOptional(p, 'mask', []);     
 parse(p, cfg, detp, varargin{:});
 
 %% 处理环检测器
@@ -39,8 +40,15 @@ if ~isempty(varargin)
         center = p.Results.center;  % 使用用户提供的center值
     end
     
-    [detp, idNum] = MCXSetRingDetid(detp,center,SDS,SDSWidth);
-    
+    if isempty(p.Results.mask)
+        [detp, idNum] = MCXSetRingDetid(detp,center,SDS,SDSWidth);
+    else
+        for i = 1:size(mask,3)
+            photonsInMask = getPhotonsInMask(detp.p(:,1:2), ...
+                p.Results.mask(:,:,i));
+            detp.detid(photonsInMask) = i;
+        end
+    end
 else
     idNum = size(cfg.detpos,1);
 end
