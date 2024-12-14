@@ -55,12 +55,19 @@ if isAngle && ~isempty(strfind(cfg.savedetflag, 'v'))
     angleEnergy = exportAngle(detp, cfg, SDS, SDSWidth);
     writematrix([NaN(1,90); angleEnergy], absorbanceWritePath, 'WriteMode', 'append', 'Sheet', '角度')
 end
+
 % 通过flux导出光密度和光能量
 % [ringphotonDensity(:,i), ringphotonEnergy(:,i), numVoxels(:,i)] = exportRingDetectorPhotonDensity(cfg, f, SDS, SDSWidth, 1);
-
-% 写入数据
-writematrix(energy, absorbanceWritePath, 'Sheet', '原始光能量', 'WriteMode','append');
-writematrix([NaN(1,idNums); detPath], absorbanceWritePath, 'Sheet', '光程', 'WriteMode','append');
 % writematrix(ringphotonDensity(:,i)', fluxFilePath, 'WriteMode', 'append','Sheet','光密度');
 % writematrix(ringphotonEnergy(:,i)', fluxFilePath, 'WriteMode', 'append','Sheet','光能量');
+
+% 写入数据
+% writematrix(energy, absorbanceWritePath, 'Sheet', '原始光能量', 'WriteMode','append');
+% writematrix([NaN(1,idNums); detPath], absorbanceWritePath, 'Sheet', '光程', 'WriteMode','append');
+writetable(energy, absorbanceWritePath, 'Sheet', '原始光能量', 'WriteMode','append');
+writetable(detPath, absorbanceWritePath, 'Sheet', '光程', 'WriteMode','append');
+
+energy = table2array(energy);
+absorbance = table2array(absorbance);
+detPath = table2array(detPath);
 end
