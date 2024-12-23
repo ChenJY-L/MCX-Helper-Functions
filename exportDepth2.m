@@ -31,11 +31,13 @@ addOptional(p, 'width', 0.2);
 addOptional(p, 'savepath',[]);
 addOptional(p, 'numWorkers', 8);
 addOptional(p, 'layers', []);
+addOptional(p, 'isppath', false);
 parse(p, cfg, detp, varargin{:});
 
 savepath = p.Results.savepath;
 M = p.Results.numWorkers;
 layers = p.Results.layers;
+isppath = p.Results.isppath;
 %% 处理环检测器
 if ~isempty(varargin)
     SDS = p.Results.SDS / cfg.unitinmm;
@@ -100,31 +102,55 @@ for detid = 1:idNum
         end
     end
     
+    if isppath
+        if ~isempty(layers)
+            pathTraj = zeros(numel(layers), length(detp2.detid));
+        else
+            % 对轨迹进行重新排列
+            traj = mcxplotphotons(traj, 'noplot'); 
+            idIdx = find(diff(traj.id)); % 每个光子的最后一个位置索引
+            
+            % 根据光子的出射位置匹配 detp 和 traj
+            [tf, loc] = ismember(traj.pos([idIdx; end], :), detp2.p, 'rows');
+            pathTraj = zeros(size(cfg.prop,1)-1, length(detp2.detid));
+        end
+    end
+    
     depths = zeros(1, length(detp2.detid));
     weights = zeros(1, length(detp2.detid));
-    pathTraj = zeros(numel(layers), length(detp2.detid));
+    
     parfor (i = 0:length(detp2.detid) - 1, M)
+    % for i = 0:length(detp2.detid)-1
         % 提取某个光子的全部运动轨迹
         pos = traj.pos(traj.id == i,:);
         
         % 提取光子的最后能量
         idx = find(traj.id == i, 1, 'last');
         
-        % 提取运动过程中，最大的z坐标
-        if ~isempty(layers)
-            pathTraj(:, i+1) = calculatePPath(pos, layers, detp2.prop);
+        if isppath
+            if ~isempty(layers)
+                pathTraj(:, i+1) = calculatePPath(pos, layers, detp2.prop);
+                weights(i+1) = traj.data(5,idx);
+            else
+                pathTraj(:, i+1) = detp2.ppath(loc(i+1), :)';
+                weights(i+1) = detWeight(loc(i+1));
+            end
+        else
+            weights(i+1) = traj.data(5,idx);
         end
+
+        % 提取运动过程中，最大的z坐标
         depths(i+1) = max(pos(:,3));
-        weights(i+1) = traj.data(5,idx);
     end
     detids = ones(1,length(detp2.detid))*detid;
     distances = ones(1,length(detp2.detid))*d.*cfg.unitinmm;
     
-    if isempty(layers)
-        tmp1 = [detids; distances; depths; weights];
-    else
-        tmp1 = [detids; distances; depths; weights; pathTraj .* cfg.unitinmm];
-    end
+    % if isempty(layers)
+    %     tmp1 = [detids; distances; depths; weights];
+    % else
+    %     tmp1 = [detids; distances; depths; weights; pathTraj .* cfg.unitinmm];
+    % end
+    tmp1 = [detids; distances; depths; weights; pathTraj .* cfg.unitinmm];
 
     tmp2 = [detids;distances;detWeight';detp2.ppath'.*cfg.unitinmm];
 
@@ -158,8 +184,8 @@ out = sortrows(out, [1,2]);
 outPPath = outPPath';
 % 添加表头
 tableHeader = {'检测器ID', 'SDS(mm)', '最大穿透深度(mm)', '光能量(traj)'};
-if ~isempty(layers)
-    for i = 1:numel(layers)
+if isppath 
+    for i = 1:size(out,2) - 4
         tableHeader{end + 1} = ['介质', num2str(i), '(mm)'];
     end
 end
