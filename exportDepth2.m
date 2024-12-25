@@ -83,6 +83,7 @@ for detid = 1:idNum
 
     if find(ppath1 == ppath2)
         detWeight = mcxdetweight(detp2, cfg.prop, cfg.unitinmm);
+        dettime = mcxdettime(detp2, cfg.prop, cfg.unitinmm);
         errorDet(detid) = 1;
     else
         detWeight = detWeights(index);
@@ -118,6 +119,7 @@ for detid = 1:idNum
     
     depths = zeros(1, length(detp2.detid));
     weights = zeros(1, length(detp2.detid));
+    TOFs = zeros(1, length(detp2.detid));
     
     parfor (i = 0:length(detp2.detid) - 1, M)
     % for i = 0:length(detp2.detid)-1
@@ -134,6 +136,7 @@ for detid = 1:idNum
             else
                 pathTraj(:, i+1) = detp2.ppath(loc(i+1), :)';
                 weights(i+1) = detWeight(loc(i+1));
+                TOFs(i+1) = dettime(loc(i+1));
             end
         else
             weights(i+1) = traj.data(5,idx);
@@ -144,13 +147,8 @@ for detid = 1:idNum
     end
     detids = ones(1,length(detp2.detid))*detid;
     distances = ones(1,length(detp2.detid))*d.*cfg.unitinmm;
-    
-    % if isempty(layers)
-    %     tmp1 = [detids; distances; depths; weights];
-    % else
-    %     tmp1 = [detids; distances; depths; weights; pathTraj .* cfg.unitinmm];
-    % end
-    tmp1 = [detids; distances; depths; weights; pathTraj .* cfg.unitinmm];
+
+    tmp1 = [detids; distances; depths; weights; TOFs; pathTraj .* cfg.unitinmm];
 
     tmp2 = [detids;distances;detWeight';detp2.ppath'.*cfg.unitinmm];
 
@@ -183,9 +181,9 @@ out = sortrows(out, [1,2]);
 
 outPPath = outPPath';
 % 添加表头
-tableHeader = {'检测器ID', 'SDS(mm)', '最大穿透深度(mm)', '光能量(traj)'};
+tableHeader = {'检测器ID', 'SDS(mm)', '最大穿透深度(mm)', '光能量', '光子飞行时间'};
 if isppath 
-    for i = 1:size(out,2) - 4
+    for i = 1:size(out,2) - numel(tableHeader)
         tableHeader{end + 1} = ['介质', num2str(i), '(mm)'];
     end
 end
