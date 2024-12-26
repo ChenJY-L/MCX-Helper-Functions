@@ -1,12 +1,18 @@
-function res = exportPhotonPath(cfg, seeds, detp, varargin)
+function res = exportPhotonPath(cfg, detp, seeds, slice, savePath, varargin)
 %% 设置输入检测
 p = inputParser;
 addRequired(p, 'cfg');
 addRequired(p, 'detp');
 addOptional(p, 'SDS', [1.7, 2.0, 2.3, 2.6, 2.9]);
 addOptional(p, 'width', 0.2);
-addOptional(p, 'numWorkers', 8);
+addOptional(p, 'numWorkers', 6);
 parse(p, cfg, detp, varargin{:});
+
+%% 并行池初始化
+if isempty(gcp('nocreate')) % 如果并行未开启
+    parpool(p.Results.numWorkers);
+end
+
 %% 处理环检测器
 if ~isempty(varargin)
     SDS = p.Results.SDS / cfg.unitinmm;
@@ -24,7 +30,7 @@ end
 out = {};
 for detid = 1:idNum
     % 使用MCX对光子进行replay
-    photons = find(detp.detid == detid & detWeights > thresh);
+    photons = find(detp.detid == detid);
 
     if isempty(photons)
         continue
@@ -38,7 +44,7 @@ for detid = 1:idNum
     newcfg.maxjumpdebug = 1e7;
     [f, detp2, ~, ~, traj] = mcxlab(newcfg);
 
-    grids = zerosLike(cfg.vol);
+    grids = zeros(size(cfg.vol));
     % 获取光子数量
     numPhotons = length(detp2.detid);
 
@@ -47,7 +53,7 @@ for detid = 1:idNum
     chunks = ceil(numPhotons / numWorkers);
 
     % 使用 parfor 均分数据并计算局部网格
-    parfor workerIdx = 1:numWorkers
+    for workerIdx = 1:numWorkers
         % 计算当前线程负责的光子 ID 范围
         photonStart = (workerIdx - 1) * chunks + 1;
         photonEnd = min(workerIdx * chunks, numPhotons);
@@ -61,58 +67,32 @@ for detid = 1:idNum
             pos = ceil(traj.pos(traj.id == i, :));
 
             % 遍历光子路径
-            for j = 2:size(pos, 1)
+            for j = 2:size(pos, 1) - 1
                 % 获取两点之间的连线体素
-                voxels = bresenham3D(pos(j-1,:), pos(j,:));
-                
+                [X, Y, Z] = bresenham_line3d(pos(j-1,:) + 1, pos(j,:) + 1);
+
                 % 累加体素到局部网格
-                for v = 1:size(voxels, 1)
-                    localGrids(voxels(v, 1), voxels(v, 2), voxels(v, 3)) = ...
-                        localGrids(voxels(v, 1), voxels(v, 2), voxels(v, 3)) + 1;
+                for v = 1:length(X)
+                    localGrids(X(v), Y(v), Z(v)) = ...
+                        localGrids(X(v), Y(v), Z(v)) + 1;
                 end
             end
         end
 
         % 保存局部网格到结果集合
-        allLocalGrids{workerIdx} = localGrids; 
+        allLocalGrids{workerIdx} = localGrids;
     end
 
     % 合并所有局部网格到全局网格
     for workerIdx = 1:numWorkers
         grids = grids + allLocalGrids{workerIdx};
     end
-    
+    grids = squeeze(grids(:, slice, :));
     % 将grids保存为一个mat文件
-    save(['grids-' num2str(detid) '.mat'], "grids")
+    saveFileName = sprintf('%s-grids-%g.mat',savePath, detid);
+    save(saveFileName, "grids")
 
 end
 
 end
 
-function voxels = bresenham3D(startPoint, endPoint)
-    % Bresenham 算法计算两点连线经过的体素
-    startPoint = round(startPoint);
-    endPoint = round(endPoint);
-    
-    % 计算步长和差值
-    diff = abs(endPoint - startPoint);
-    step = sign(endPoint - startPoint);
-    maxDiff = max(diff);
-    t = 0.5; % 初始误差
-    
-    % 初始化体素坐标
-    voxels = [];
-    currentPoint = startPoint;
-    
-    for i = 1:maxDiff+1
-        % 添加当前点到路径
-        voxels = [voxels; currentPoint];
-        for dim = 1:3
-            t(dim) = t(dim) + diff(dim);
-            if t(dim) >= maxDiff
-                currentPoint(dim) = currentPoint(dim) + step(dim);
-                t(dim) = t(dim) - maxDiff;
-            end
-        end
-    end
-end

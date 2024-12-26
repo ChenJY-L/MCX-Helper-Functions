@@ -37,7 +37,7 @@ for i = 1:idx
     flux = mcxlab(newcfg);
 
     tmp = squeeze(flux.data(:, slice, :));
-    saveFileName = sprintf('%s-%d.mat', savePath, i);
+    saveFileName = sprintf('%s-%g.mat', savePath, i);
     save(saveFileName, "tmp")
 end
 
