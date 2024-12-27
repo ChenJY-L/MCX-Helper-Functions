@@ -1,4 +1,4 @@
-function exportJacobian(cfg, detp, seeds, slice, savePath, SDS, SDSWidth, outputtype)
+function exportJacobian(cfg, detp, seeds, slice, savePath, varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % exportJacobian 导出MCX灵敏度矩阵(Jacobian)
 %   Input:
@@ -16,17 +16,29 @@ function exportJacobian(cfg, detp, seeds, slice, savePath, SDS, SDSWidth, output
 % MCX中，设置cfg.outputtype = 'jacobian'后，MCX会根据每个光子的随机种子，对光
 % 子的传播路径进行复现。并将
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 设置输入检测
+p = inputParser;
+addRequired(p, 'cfg');
+addRequired(p, 'detp');
+addOptional(p, 'SDS', [1.7, 2.0, 2.3, 2.6, 2.9]);
+addOptional(p, 'width', 0.2);
+addOptional(p, 'outputtype', 'jacobian');
+parse(p, cfg, detp, varargin{:});
 
-if nargin < 8
-    outputtype = 'jacobian'; % 默认设为'jacobian'
+%% 处理环检测器
+if ~isempty(varargin)
+    SDS = p.Results.SDS / cfg.unitinmm;
+    SDSWidth = p.Results.width / cfg.unitinmm;
+
+    % 重新计算detid
+    center = size(cfg.vol,[1,2])/2; % 计算中心点坐标 (是否需要+0.5?)
+
+    [detp, idNum] = MCXSetRingDetid(detp,center,SDS,SDSWidth);
+else
+    idNum = size(cfg.detpos, 1);
 end
 
-SDS = SDS./cfg.unitinmm;
-SDSWidth = SDSWidth/cfg.unitinmm;
-center = size(cfg.vol, [1 2]);
-[detp, idx] = MCXSetRingDetid(detp, center, SDS, SDSWidth);
-
-for i = 1:idx
+for i = 1:idNum
     index = detp.detid == i;
     newcfg = cfg;
     newcfg.respin = 1;

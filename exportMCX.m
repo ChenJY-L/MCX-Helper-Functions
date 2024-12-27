@@ -40,6 +40,9 @@ elseif strcmp(detectorType, "overlap")
         [energy , absorbance , detPath] = exportAbsorbance(cfg, detp);
     end
 
+elseif strcmp(detectorType, "single")
+    [energy , absorbance , detPath] = exportAbsorbance(cfg, detp);
+
 else
     error("Error detector type!")
 end
@@ -52,7 +55,11 @@ end
 
 % 考虑导出光子出射角度
 if isAngle && ~isempty(strfind(cfg.savedetflag, 'v'))
-    angleEnergy = exportAngle(detp, cfg, SDS, SDSWidth);
+    if strcmp(detectorType, 'single')
+        angleEnergy = exportAngle(detp, cfg);
+    else
+        angleEnergy = exportAngle(detp, cfg, 'SDS', SDS, 'width', SDSWidth);
+    end
     writematrix([NaN(1,90); angleEnergy], absorbanceWritePath, 'WriteMode', 'append', 'Sheet', '角度')
 end
 

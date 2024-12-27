@@ -9,9 +9,10 @@ addOptional(p, 'numWorkers', 6);
 parse(p, cfg, detp, varargin{:});
 
 %% 并行池初始化
-if isempty(gcp('nocreate')) % 如果并行未开启
-    parpool(p.Results.numWorkers);
+if ~isempty(gcp('nocreate')) % 如果并行未开启
+    delete(gcp('nocreate'))
 end
+parpool(p.Results.numWorkers);
 
 %% 处理环检测器
 if ~isempty(varargin)
@@ -23,7 +24,7 @@ if ~isempty(varargin)
 
     [detp, idNum] = MCXSetRingDetid(detp,center,SDS,SDSWidth);
 else
-    idNum = length(cfg.detpos);
+    idNum = size(cfg.detpos, 1);
 end
 
 %% 计算光子计数

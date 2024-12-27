@@ -29,6 +29,7 @@ addOptional(p, 'mask', []);
 parse(p, cfg, detp, varargin{:});
 
 %% 处理环检测器
+SDS = [];
 if ~isempty(varargin)
     SDS = p.Results.SDS / cfg.unitinmm;
     SDSWidth = p.Results.width / cfg.unitinmm;

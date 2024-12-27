@@ -48,6 +48,7 @@ if ~isempty(varargin)
     
     [detp, idNum] = MCXSetRingDetid(detp,center,SDS,SDSWidth);
 else
+    SDS = 1:length(cfg.detpos);
     idNum = length(cfg.detpos);
 end
 
