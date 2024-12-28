@@ -15,7 +15,8 @@ end
 parpool(p.Results.numWorkers);
 
 %% 处理环检测器
-if ~isempty(varargin)
+SDS = [];
+if ~isempty(SDS)
     SDS = p.Results.SDS / cfg.unitinmm;
     SDSWidth = p.Results.width / cfg.unitinmm;
 
@@ -88,7 +89,7 @@ for detid = 1:idNum
     for workerIdx = 1:numWorkers
         grids = grids + allLocalGrids{workerIdx};
     end
-    grids = squeeze(grids(:, slice, :));
+    % grids = squeeze(grids(:, slice, :));
     % 将grids保存为一个mat文件
     saveFileName = sprintf('%s-grids-%g.mat',savePath, detid);
     save(saveFileName, "grids")
