@@ -23,8 +23,11 @@ addRequired(p, 'detp');
 addOptional(p, 'SDS', [1.7, 2.0, 2.3, 2.6, 2.9]);
 addOptional(p, 'width', 0.2);
 addOptional(p, 'outputtype', 'jacobian');
+addOptional(p, 'isSlice', true);
 parse(p, cfg, detp, varargin{:});
 
+isSlice = p.Results.isSlice;
+outputtype = p.Results.outputtype;
 %% 处理环检测器
 if ~isempty(varargin)
     SDS = p.Results.SDS / cfg.unitinmm;
@@ -47,8 +50,12 @@ for i = 1:idNum
     newcfg.detphotons = detp.data(:, index);
     
     flux = mcxlab(newcfg);
-
-    tmp = squeeze(flux.data(:, slice, :));
+    
+    if isSlice
+        tmp = squeeze(flux.data(:, slice, :));
+    else
+        tmp = flux.data;
+    end
     saveFileName = sprintf('%s-%g.mat', savePath, i);
     save(saveFileName, "tmp")
 end
