@@ -20,16 +20,17 @@ function exportJacobian(cfg, detp, seeds, slice, savePath, varargin)
 p = inputParser;
 addRequired(p, 'cfg');
 addRequired(p, 'detp');
-addOptional(p, 'SDS', [1.7, 2.0, 2.3, 2.6, 2.9]);
+addOptional(p, 'SDS', []);
 addOptional(p, 'width', 0.2);
 addOptional(p, 'outputtype', 'jacobian');
-addOptional(p, 'isSlice', true);
+addOptional(p, 'isSlice', false);
 parse(p, cfg, detp, varargin{:});
 
+SDS = p.Results.SDS;
 isSlice = p.Results.isSlice;
 outputtype = p.Results.outputtype;
 %% 处理环检测器
-if ~isempty(varargin)
+if ~isempty(SDS)
     SDS = p.Results.SDS / cfg.unitinmm;
     SDSWidth = p.Results.width / cfg.unitinmm;
 
