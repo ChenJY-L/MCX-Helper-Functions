@@ -26,6 +26,7 @@ addOptional(p, 'SDS', []);
 addOptional(p, 'width', 0.2);
 addOptional(p, 'center', []);  % 添加'center'为可选输入
 addOptional(p, 'mask', []);     
+addOptional(p, 'isexporttable', true);
 parse(p, cfg, detp, varargin{:});
 
 %% 处理环检测器
@@ -75,17 +76,18 @@ for i = 1:idNum    % 探测器编号
     end
 end
 
-% 添加表头
-if ~isempty(SDS)
-    tableHeader = arrayfun(@(x) ['检测器' num2str(x)], SDS.*cfg.unitinmm, 'UniformOutput', false);
-else
-    tableHeader = arrayfun(@(x) ['检测器' num2str(x)], 1:idNum, 'UniformOutput', false);
+if p.Results.isexporttable
+    % 添加表头
+    if ~isempty(SDS)
+        tableHeader = arrayfun(@(x) ['检测器' num2str(x)], SDS.*cfg.unitinmm, 'UniformOutput', false);
+    else
+        tableHeader = arrayfun(@(x) ['检测器' num2str(x)], 1:idNum, 'UniformOutput', false);
+    end
+    
+    rowHeader = arrayfun(@(x) ['介质' num2str(x)], 1:size(detPath, 1), 'UniformOutput', false);
+    
+    energy = array2table(energy, 'VariableNames', tableHeader);
+    absorbance = array2table(absorbance, 'VariableNames', tableHeader);
+    detPath = array2table(detPath, 'VariableNames', tableHeader, 'RowNames', rowHeader);
 end
-
-rowHeader = arrayfun(@(x) ['介质' num2str(x)], 1:size(detPath, 1), 'UniformOutput', false);
-
-energy = array2table(energy, 'VariableNames', tableHeader);
-absorbance = array2table(absorbance, 'VariableNames', tableHeader);
-detPath = array2table(detPath, 'VariableNames', tableHeader, 'RowNames', rowHeader);
-
 end
