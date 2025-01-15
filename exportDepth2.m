@@ -2,14 +2,14 @@ function [out, meanDepth, outPPath] = exportDepth2(cfg, seeds, detp, thresh, var
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  func: 导出仿真的穿透深度
 %
-%  Input: 
+%  Input:
 %   cfg: 仿真参数设置
 %   seeds: 光子种子的集合
 %   detp: 探测光子集合
 %   'SDS'(mm): 数组存储环的中心半径
 %   'width'(mm): 环的宽度
 %
-%  Output: 
+%  Output:
 %   out(nphoton,3): 第一列是每个光子的穿透深度(mm)，第二列是每个光子的SDSid，
 %   第三列是每个光子对应的SDS半径(mm)
 %
@@ -28,7 +28,7 @@ addRequired(p, 'cfg');
 addRequired(p, 'detp');
 addOptional(p, 'SDS', [1.7, 2.0, 2.3, 2.6, 2.9]);
 addOptional(p, 'width', 0.2);
-addOptional(p, 'savepath',[]);
+addOptional(p, 'savepath', []);
 addOptional(p, 'numWorkers', 8);
 addOptional(p, 'layers', []);
 addOptional(p, 'isppath', false);
@@ -41,12 +41,12 @@ isppath = p.Results.isppath;
 %% 处理环检测器
 if ~isempty(varargin)
     SDS = p.Results.SDS / cfg.unitinmm;
-    SDSWidth = p.Results.width / cfg.unitinmm; 
-    
+    SDSWidth = p.Results.width / cfg.unitinmm;
+
     % 重新计算detid
-    center = size(cfg.vol,[1,2])/2; % 计算中心点坐标 (是否需要+0.5?)
-    
-    [detp, idNum] = MCXSetRingDetid(detp,center,SDS,SDSWidth);
+    center = size(cfg.vol, [1, 2]) / 2; % 计算中心点坐标 (是否需要+0.5?)
+
+    [detp, idNum] = MCXSetRingDetid(detp, center, SDS, SDSWidth);
 else
     SDS = 1:length(cfg.detpos);
     idNum = length(cfg.detpos);
@@ -54,33 +54,33 @@ end
 
 %% 导出最大穿透深度
 % 计算中心的位置
-center = size(cfg.vol, [1,2])./2;
+center = size(cfg.vol, [1, 2]) ./ 2;
 out = zeros(0);
 outPPath = zeros(0);
 
 % 计算被探测到时的光子重量
-meanDepth = zeros(1,idNum);
-errorDet = zeros(1,idNum);
+meanDepth = zeros(1, idNum);
+errorDet = zeros(1, idNum);
 detWeights = mcxdetweight(detp, cfg.prop, cfg.unitinmm);
 
 for detid = 1:idNum
     % 使用MCX对光子进行replay
     photons = find(detp.detid == detid & detWeights > thresh);
-    
+
     if isempty(photons)
         continue
     end
 
     newcfg = cfg;
     newcfg.respin = 1;
-    newcfg.seed = seeds.data(:,photons);
+    newcfg.seed = seeds.data(:, photons);
     newcfg.outputtype = 'jacobian';
-    newcfg.detphotons = detp.data(:,photons);
+    newcfg.detphotons = detp.data(:, photons);
     newcfg.maxjumpdebug = 1e7;
     [f, detp2, ~, ~, traj] = mcxlab(newcfg);
-    
-    [ppath1, index] = sortrows(detp.ppath(photons, :), [1,2,3]);
-    ppath2 = sortrows(detp2.ppath, [1,2,3]);
+
+    [ppath1, index] = sortrows(detp.ppath(photons, :), [1, 2, 3]);
+    ppath2 = sortrows(detp2.ppath, [1, 2, 3]);
 
     if find(ppath1 == ppath2)
         detWeight = mcxdetweight(detp2, cfg.prop, cfg.unitinmm);
@@ -90,113 +90,112 @@ for detid = 1:idNum
         detWeight = detWeights(index);
         errorDet(detid) = 0;
     end
-    
+
     if isempty(varargin)
         % 使用球形检测器时，计算检测器的SDS
         d = norm(cfg.detpos(detid, 1:2) - center);
     else
         if detid == -1
             % 光子detid为-1，表面该光子未被环形检测器探测
-            d = NaN;  
+            d = NaN;
         else
             % 记录检测器id
             d = SDS(detid);
         end
     end
-    
+
     if isppath
         if ~isempty(layers)
             pathTraj = zeros(numel(layers), length(detp2.detid));
         else
             % 对轨迹进行重新排列
-            traj = mcxplotphotons(traj, 'noplot'); 
+            traj = mcxplotphotons(traj, 'noplot');
             idIdx = find(diff(traj.id)); % 每个光子的最后一个位置索引
-            
+
             % 根据光子的出射位置匹配 detp 和 traj
             [tf, loc] = ismember(traj.pos([idIdx; end], :), detp2.p, 'rows');
-            pathTraj = zeros(size(cfg.prop,1)-1, length(detp2.detid));
+            pathTraj = zeros(size(cfg.prop, 1) - 1, length(detp2.detid));
         end
     end
-    
+
     depths = zeros(1, length(detp2.detid));
     weights = zeros(1, length(detp2.detid));
     TOFs = zeros(1, length(detp2.detid));
-    
+
     parfor (i = 0:length(detp2.detid) - 1, M)
-    % for i = 0:length(detp2.detid)-1
+        % for i = 0:length(detp2.detid)-1
         % 提取某个光子的全部运动轨迹
-        pos = traj.pos(traj.id == i,:);
-        
+        pos = traj.pos(traj.id == i, :);
+
         % 提取光子的最后能量
         idx = find(traj.id == i, 1, 'last');
-        
+
         if isppath
             if ~isempty(layers)
-                pathTraj(:, i+1) = calculatePPath(pos, layers, detp2.prop);
-                weights(i+1) = traj.data(5,idx);
+                pathTraj(:, i + 1) = calculatePPath(pos, layers, detp2.prop);
+                weights(i + 1) = traj.data(5, idx);
             else
-                pathTraj(:, i+1) = detp2.ppath(loc(i+1), :)';
-                weights(i+1) = detWeight(loc(i+1));
-                TOFs(i+1) = dettime(loc(i+1));
+                pathTraj(:, i + 1) = detp2.ppath(loc(i + 1), :)';
+                weights(i + 1) = detWeight(loc(i + 1));
+                TOFs(i + 1) = dettime(loc(i + 1));
             end
         else
-            weights(i+1) = traj.data(5,idx);
+            weights(i + 1) = traj.data(5, idx);
         end
 
         % 提取运动过程中，最大的z坐标
-        depths(i+1) = max(pos(:,3));
+        depths(i + 1) = max(pos(:, 3));
     end
-    detids = ones(1,length(detp2.detid))*detid;
-    distances = ones(1,length(detp2.detid))*d.*cfg.unitinmm;
+    detids = ones(1, length(detp2.detid)) * detid;
+    distances = ones(1, length(detp2.detid)) * d .* cfg.unitinmm;
 
     tmp1 = [detids; distances; depths; weights; TOFs; pathTraj .* cfg.unitinmm];
 
-    tmp2 = [detids;distances;detWeight';detp2.ppath'.*cfg.unitinmm];
+    tmp2 = [detids; distances; detWeight'; detp2.ppath' .* cfg.unitinmm];
 
     out = [out, tmp1];
     outPPath = [outPPath, tmp2];
-    
+
     % 计算加权平均穿透深度
     try
-        meanDepth(detid) = sum(weights(:).*depths(:))/sum(weights(:));
+        meanDepth(detid) = sum(weights(:) .* depths(:)) / sum(weights(:));
     catch
-        meanDepth(detid) = 0; 
+        meanDepth(detid) = 0;
     end
 
     % 保存轨迹的mat文件
-    if ~isempty(savepath)  
+    if ~isempty(savepath)
         try
-            save(fullfile(savepath, ['traj-' num2str(d*cfg.unitinmm) '.mat']), "traj")
+            save(fullfile(savepath, ['traj-' num2str(d * cfg.unitinmm) '.mat']), "traj");
         catch
-            mkdir(savepath)
-            save(fullfile(savepath, ['traj-' num2str(d*cfg.unitinmm) '.mat']), "traj")
+            mkdir(savepath);
+            save(fullfile(savepath, ['traj-' num2str(d * cfg.unitinmm) '.mat']), "traj");
         end
     end
 end
-out(3,:) = out(3,:) .* cfg.unitinmm;    % 深度
+out(3, :) = out(3, :) .* cfg.unitinmm;    % 深度
 
 meanDepth = meanDepth .* cfg.unitinmm;
-meanDepth = [meanDepth;errorDet];
+meanDepth = [meanDepth; errorDet];
 out = out';
-out = sortrows(out, [1,2]);
+out = sortrows(out, [1, 2]);
 
 outPPath = outPPath';
 % 添加表头
 tableHeader = {'检测器ID', 'SDS(mm)', '最大穿透深度(mm)', '光能量', '光子飞行时间'};
-if isppath 
-    for i = 1:size(out,2) - numel(tableHeader)
+if isppath
+    for i = 1:size(out, 2) - numel(tableHeader)
         tableHeader{end + 1} = ['介质', num2str(i), '(mm)'];
     end
 end
-out = array2table(out,"VariableNames",tableHeader);
+out = array2table(out, "VariableNames", tableHeader);
 
 tableHeader = {'检测器ID', 'SDS(mm)', '光能量(ppath)'};
-for i = 1:size(cfg.prop,1) - 1
+for i = 1:size(cfg.prop, 1) - 1
     tableHeader{end + 1} = ['介质', num2str(i)];
 end
 outPPath = array2table(outPPath, "VariableNames", tableHeader);
 end
-
 
 function ppath = calculatePPath(pos, layers, prop)
 ppath = zeros(numel(layers), 1);
@@ -212,21 +211,21 @@ for i = 2:length(pos)
         currentLayer = currentLayer + 1; % 更新当前层
         if currentLayer > numel(layers) % 超过最深层
             currentLayer = numel(layers); % 限制为最深层
-            break;
+            break
         end
         currentN = n(currentLayer); % 更新折射率
     end
-    
+
     while pos(i, 3) < layersZ(currentLayer)
         currentLayer = currentLayer - 1; % 回到上一层
         if currentLayer <= 0 % 超过最浅层
             currentLayer = 1; % 限制为最浅层
             currentN = n(currentLayer); % 更新折射率为第一层
-            break;
+            break
         end
         currentN = n(currentLayer); % 更新折射率
     end
-    
+
     dis = norm(pos(i, :) - pos(i - 1, :)) * currentN;   % 计算光程
     ppath(currentLayer) = ppath(currentLayer) + dis;    % 光程累加
 end

@@ -1,13 +1,13 @@
-function [energy,absorbance,detPath] = exportMCX( ...
-    cfg, detp, detectorType, absorbanceWritePath, ...
-    idNums, SDS, SDSWidth, responseWave, wavelength, ...
-    isusefakeSDS, isuseresponse, isAngle)
+function [energy, absorbance, detPath] = exportMCX( ...
+                                                 cfg, detp, detectorType, absorbanceWritePath, ...
+                                                 idNums, SDS, SDSWidth, responseWave, wavelength, ...
+                                                 isusefakeSDS, isuseresponse, isAngle)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%exportMCX 导出MCX模拟后的仿真结果，并自动写入excel中
+% exportMCX 导出MCX模拟后的仿真结果，并自动写入excel中
 %   == 输入参数 ==
 %       cfg: 实验设置
 %       detp: 检测光子信息
-%       detectorType: 设置检测器的类型 
+%       detectorType: 设置检测器的类型
 %       absorbanceWritePath: 吸光度导出路径
 %       idNums: SDS个数
 %       SDS: 环形检测器中心半径
@@ -25,31 +25,31 @@ function [energy,absorbance,detPath] = exportMCX( ...
 
 % 通过Detp计算光能量，吸光度，光密度
 if strcmp(detectorType, "ring") | strcmp(detectorType, "sphere")
-    [energy , absorbance , detPath] = exportAbsorbance(cfg, detp, ...
-        'SDS', SDS, 'width', SDSWidth);
+    [energy, absorbance, detPath] = exportAbsorbance(cfg, detp, ...
+                                                       'SDS', SDS, 'width', SDSWidth);
 
 elseif strcmp(detectorType, "overlap")
     if isusefakeSDS
         % 修复MCX输出位置错位的bug
-        detp.detid = detp.detid.*0 + 1;
+        detp.detid = detp.detid .* 0 + 1;
         detp.p(:, 1:2) = detp.p(:, 1:2) + [1 1];
 
-        [energy , absorbance , detPath] = exportAbsorbance(cfg, detp, ...
-            'SDS', SDS, 'width', SDSWidth);
+        [energy, absorbance, detPath] = exportAbsorbance(cfg, detp, ...
+                                                           'SDS', SDS, 'width', SDSWidth);
     else
-        [energy , absorbance , detPath] = exportAbsorbance(cfg, detp);
+        [energy, absorbance, detPath] = exportAbsorbance(cfg, detp);
     end
 
 elseif strcmp(detectorType, "single")
-    [energy , absorbance , detPath] = exportAbsorbance(cfg, detp);
+    [energy, absorbance, detPath] = exportAbsorbance(cfg, detp);
 
 else
-    error("Error detector type!")
+    error("Error detector type!");
 end
 
 % 考虑响应曲线
 if isuseresponse
-    response = interp1(responseWave(:,1), responseWave(:,2), wavelength, "spline");
+    response = interp1(responseWave(:, 1), responseWave(:, 2), wavelength, "spline");
     energy = energy .* response;
 end
 
@@ -60,7 +60,7 @@ if isAngle && ~isempty(strfind(cfg.savedetflag, 'v'))
     else
         angleEnergy = exportAngle(detp, cfg, 'SDS', SDS, 'width', SDSWidth);
     end
-    writematrix([NaN(1,90); angleEnergy], absorbanceWritePath, 'WriteMode', 'append', 'Sheet', '角度')
+    writematrix([NaN(1, 90); angleEnergy], absorbanceWritePath, 'WriteMode', 'append', 'Sheet', '角度');
 end
 
 % 通过flux导出光密度和光能量
@@ -71,8 +71,8 @@ end
 % 写入数据
 % writematrix(energy, absorbanceWritePath, 'Sheet', '原始光能量', 'WriteMode','append');
 % writematrix([NaN(1,idNums); detPath], absorbanceWritePath, 'Sheet', '光程', 'WriteMode','append');
-writetable(energy, absorbanceWritePath, 'Sheet', '原始光能量', 'WriteMode','append');
-writetable(detPath, absorbanceWritePath, 'Sheet', '光程', 'WriteMode','append');
+writetable(energy, absorbanceWritePath, 'Sheet', '原始光能量', 'WriteMode', 'append');
+writetable(detPath, absorbanceWritePath, 'Sheet', '光程', 'WriteMode', 'append');
 
 energy = table2array(energy);
 absorbance = table2array(absorbance);

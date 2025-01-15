@@ -12,7 +12,7 @@ function exportJacobian(cfg, detp, seeds, slice, savePath, varargin)
 %       outputtype: (optional) 设置cfg.outputtype的参数
 %   Output:
 %       meanDepth: 平均突透深度
-% 
+%
 % MCX中，设置cfg.outputtype = 'jacobian'后，MCX会根据每个光子的随机种子，对光
 % 子的传播路径进行复现。并将
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -35,9 +35,9 @@ if ~isempty(SDS)
     SDSWidth = p.Results.width / cfg.unitinmm;
 
     % 重新计算detid
-    center = size(cfg.vol,[1,2])/2; % 计算中心点坐标 (是否需要+0.5?)
+    center = size(cfg.vol, [1, 2]) / 2; % 计算中心点坐标 (是否需要+0.5?)
 
-    [detp, idNum] = MCXSetRingDetid(detp,center,SDS,SDSWidth);
+    [detp, idNum] = MCXSetRingDetid(detp, center, SDS, SDSWidth);
 else
     idNum = size(cfg.detpos, 1);
 end
@@ -49,16 +49,16 @@ for i = 1:idNum
     newcfg.seed = seeds.data(:, index);
     newcfg.outputtype = outputtype; % 使用变量outputtype
     newcfg.detphotons = detp.data(:, index);
-    
+
     flux = mcxlab(newcfg);
-    
+
     if isSlice
         tmp = squeeze(flux.data(:, slice, :));
     else
         tmp = flux.data;
     end
     saveFileName = sprintf('%s-%g.mat', savePath, i);
-    save(saveFileName, "tmp")
+    save(saveFileName, "tmp");
 end
 
 end

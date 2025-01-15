@@ -10,7 +10,7 @@ parse(p, cfg, detp, varargin{:});
 
 %% 并行池初始化
 if ~isempty(gcp('nocreate')) % 如果并行未开启
-    delete(gcp('nocreate'))
+    delete(gcp('nocreate'));
 end
 parpool(p.Results.numWorkers);
 
@@ -21,9 +21,9 @@ if ~isempty(SDS)
     SDSWidth = p.Results.width / cfg.unitinmm;
 
     % 重新计算detid
-    center = size(cfg.vol,[1,2])/2; % 计算中心点坐标 (是否需要+0.5?)
+    center = size(cfg.vol, [1, 2]) / 2; % 计算中心点坐标 (是否需要+0.5?)
 
-    [detp, idNum] = MCXSetRingDetid(detp,center,SDS,SDSWidth);
+    [detp, idNum] = MCXSetRingDetid(detp, center, SDS, SDSWidth);
 else
     idNum = size(cfg.detpos, 1);
 end
@@ -40,9 +40,9 @@ for detid = 1:idNum
 
     newcfg = cfg;
     newcfg.respin = 1;
-    newcfg.seed = seeds.data(:,photons);
+    newcfg.seed = seeds.data(:, photons);
     newcfg.outputtype = 'jacobian';
-    newcfg.detphotons = detp.data(:,photons);
+    newcfg.detphotons = detp.data(:, photons);
     newcfg.maxjumpdebug = 1e7;
     [f, detp2, ~, ~, traj] = mcxlab(newcfg);
 
@@ -71,7 +71,7 @@ for detid = 1:idNum
             % 遍历光子路径
             for j = 2:size(pos, 1) - 1
                 % 获取两点之间的连线体素
-                [X, Y, Z] = bresenham_line3d(pos(j-1,:) + 1, pos(j,:) + 1);
+                [X, Y, Z] = bresenham_line3d(pos(j - 1, :) + 1, pos(j, :) + 1);
 
                 % 累加体素到局部网格
                 for v = 1:length(X)
@@ -91,10 +91,9 @@ for detid = 1:idNum
     end
     % grids = squeeze(grids(:, slice, :));
     % 将grids保存为一个mat文件
-    saveFileName = sprintf('%s-grids-%g.mat',savePath, detid);
-    save(saveFileName, "grids")
+    saveFileName = sprintf('%s-grids-%g.mat', savePath, detid);
+    save(saveFileName, "grids");
 
 end
 
 end
-

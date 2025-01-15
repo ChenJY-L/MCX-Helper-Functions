@@ -1,6 +1,6 @@
-function [detp, idNum] = MCXSetRingDetid(detp,center,SDS,SDSWidth)
+function [detp, idNum] = MCXSetRingDetid(detp, center, SDS, SDSWidth)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%MCXSetRingDetid 根据SDS重新划分detid
+% MCXSetRingDetid 根据SDS重新划分detid
 %
 %   == 输入参数 ==
 %       detp(struct): mcxlab导出的detp
@@ -12,11 +12,11 @@ function [detp, idNum] = MCXSetRingDetid(detp,center,SDS,SDSWidth)
 %       detp: 重新设置detid后的
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pos = detp.p(:,1:2) - center;
-distance = sqrt(pos(:,1).^2 + pos(:,2).^2);
+pos = detp.p(:, 1:2) - center;
+distance = sqrt(pos(:, 1).^2 + pos(:, 2).^2);
 
 for i = 1:length(SDS)
-    id = (distance >= (SDS(i) - SDSWidth/2)) & (distance < (SDS(i) + SDSWidth/2));
+    id = (distance >= (SDS(i) - SDSWidth / 2)) & (distance < (SDS(i) + SDSWidth / 2));
     detp.detid(id) = i;
 end
 idNum = length(SDS);

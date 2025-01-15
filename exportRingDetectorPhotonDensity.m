@@ -1,6 +1,6 @@
 function [photonDensity, photonEnergy, numVoxels] = exportRingDetectorPhotonDensity(cfg, f, SDS, width, zlayer)
 %%
-% 
+%
 %  MCX光密度导出程序
 %   # cfg: 仿真配置结构体
 %   # flux: 仿真导出的光通量，默认已经去掉了时间维度。即flux包含xyz三个维度。
@@ -11,10 +11,10 @@ function [photonDensity, photonEnergy, numVoxels] = exportRingDetectorPhotonDens
 
 flux = f.data;
 nomalizer = f.stat.normalizer;
-[m,n,c] = size(flux);
+[m, n, c] = size(flux);
 
 % 创建网格
-[xx,yy] = meshgrid(1:m,1:n);
+[xx, yy] = meshgrid(1:m, 1:n);
 
 % 转换单位
 SDS = SDS ./ cfg.unitinmm;
@@ -24,11 +24,11 @@ photonDensity = zeros(1, length(SDS));
 photonEnergy = zeros(1, length(SDS));
 numVoxels = zeros(1, length(SDS));
 
-flux = flux(:,:,zlayer);
+flux = flux(:, :, zlayer);
 for i = 1:length(SDS)
-    area = extractPoints(xx-0.5, yy-0.5, [m/2, n/2], SDS(i)-width/2, SDS(i)+width/2);
-%     photonDensity(i) = sum(sum(flux(area))) / sum(sum(area)) ...
-%                         / cfg.nphoton / (cfg.unitinmm^2);
+    area = extractPoints(xx - 0.5, yy - 0.5, [m / 2, n / 2], SDS(i) - width / 2, SDS(i) + width / 2);
+    %     photonDensity(i) = sum(sum(flux(area))) / sum(sum(area)) ...
+    %                         / cfg.nphoton / (cfg.unitinmm^2);
     numVoxels(i) = sum(sum(area));
     photonDensity(i) = sum(sum(flux(area))) / sum(sum(area));
     photonEnergy(i) = sum(sum(flux(area))) / nomalizer;
