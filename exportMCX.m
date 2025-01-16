@@ -1,7 +1,7 @@
 function [energy, absorbance, detPath] = exportMCX( ...
-                                                 cfg, detp, detectorType, absorbanceWritePath, ...
-                                                 idNums, SDS, SDSWidth, responseWave, wavelength, ...
-                                                 isusefakeSDS, isuseresponse, isAngle)
+                                                   cfg, detp, detectorType, absorbanceWritePath, ...
+                                                   idNums, SDS, SDSWidth, responseWave, wavelength, ...
+                                                   isusefakeSDS, isuseresponse, isAngle)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % exportMCX 导出MCX模拟后的仿真结果，并自动写入excel中
 %   == 输入参数 ==
@@ -26,7 +26,7 @@ function [energy, absorbance, detPath] = exportMCX( ...
 % 通过Detp计算光能量，吸光度，光密度
 if strcmp(detectorType, "ring") | strcmp(detectorType, "sphere")
     [energy, absorbance, detPath] = exportAbsorbance(cfg, detp, ...
-                                                       'SDS', SDS, 'width', SDSWidth);
+                                                     'SDS', SDS, 'width', SDSWidth);
 
 elseif strcmp(detectorType, "overlap")
     if isusefakeSDS
@@ -35,7 +35,7 @@ elseif strcmp(detectorType, "overlap")
         detp.p(:, 1:2) = detp.p(:, 1:2) + [1 1];
 
         [energy, absorbance, detPath] = exportAbsorbance(cfg, detp, ...
-                                                           'SDS', SDS, 'width', SDSWidth);
+                                                         'SDS', SDS, 'width', SDSWidth);
     else
         [energy, absorbance, detPath] = exportAbsorbance(cfg, detp);
     end
