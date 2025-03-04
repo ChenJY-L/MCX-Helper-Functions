@@ -35,7 +35,7 @@ if ~isempty(SDS)
     SDSWidth = p.Results.width / cfg.unitinmm;
 
     % 重新计算detid
-    center = size(cfg.vol, [1, 2]) / 2; % 计算中心点坐标 (是否需要+0.5?)
+    center = size(cfg.vol, [1, 2]) / 2; % 计算中心点坐标
 
     [detp, idNum] = MCXSetRingDetid(detp, center, SDS, SDSWidth);
 else

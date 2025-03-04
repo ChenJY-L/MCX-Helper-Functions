@@ -12,8 +12,13 @@ function [detp, idNum] = MCXSetRingDetid(detp, center, SDS, SDSWidth)
 %       detp: 重新设置detid后的
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pos = detp.p(:, 1:2) - center;
-distance = sqrt(pos(:, 1).^2 + pos(:, 2).^2);
+if length(center) == 2
+    pos = detp.p(:, 1:2) - center;
+    distance = sqrt(pos(:, 1).^2 + pos(:, 2).^2);
+elseif length(center) == 3
+    pos = detp.p - center;
+    distance = sqrt(pos(:, 1).^2 + pos(:, 2).^2 + pos(:, 3).^2);
+end
 
 if isscalar(SDSWidth)    % 如果仅设置一个SDS宽度
     for i = 1:length(SDS)
