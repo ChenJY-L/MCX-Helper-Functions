@@ -31,8 +31,8 @@ if strcmp(detectorType, "ring") | strcmp(detectorType, "sphere")
 elseif strcmp(detectorType, "overlap")
     if isusefakeSDS
         % 修复MCX输出位置错位的bug
-        detp.detid = detp.detid .* 0 + 1;
-        detp.p(:, 1:2) = detp.p(:, 1:2) + [1 1];
+        detp.detid = detp.detid .* 0 - 1;
+        % detp.p(:, 1:2) = detp.p(:, 1:2) + [1 1];
 
         [energy, absorbance, detPath] = exportAbsorbance(cfg, detp, ...
                                                          'SDS', SDS, 'width', SDSWidth);
@@ -72,7 +72,7 @@ end
 % writematrix(energy, absorbanceWritePath, 'Sheet', '原始光能量', 'WriteMode','append');
 % writematrix([NaN(1,idNums); detPath], absorbanceWritePath, 'Sheet', '光程', 'WriteMode','append');
 writetable(energy, absorbanceWritePath, 'Sheet', '原始光能量', 'WriteMode', 'append');
-writetable(detPath, absorbanceWritePath, 'Sheet', '光程', 'WriteMode', 'append');
+writetable(detPath, absorbanceWritePath, 'Sheet', '光程', 'WriteMode', 'append', 'WriteRowNames',true);
 
 energy = table2array(energy);
 absorbance = table2array(absorbance);
