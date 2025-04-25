@@ -58,24 +58,63 @@ else
 end
 
 %% 读取数据
-energy = zeros(1, idNum);
-absorbance = zeros(1, idNum);
-detPath = zeros(-1, idNum);
 detWeight = mcxdetweight(detp, cfg.prop, cfg.unitinmm);  % 计算被探测到时的光子重量
+validPhotonIdx = find(detp.detid > 0 & detp.detid <= idNum);
 
-for i = 1:idNum    % 探测器编号
+% 提取有效光子的数据
+validDetId     = detp.detid(validPhotonIdx);
+validDetWeight = detWeight(validPhotonIdx);
 
-    currentWeight = detWeight(detp.detid == i);
-    energy(i) = sum(currentWeight);
-    absorbance(i) = -log(energy(i) / cfg.nphoton);
-    % absorbance(i) = -log(sum(currentWeight));
+% 提取有效光子在所有介质中的路径长度 (第2行到最后一行)
+validPPathData = detp.data(2:end, validPhotonIdx); % numMedia x numValidPhotons
 
-    for j = 2:size(detp.prop, 1)
-        ppath = detp.data(j, :)';
-        detPath(j - 1, i) = sum(ppath(detp.detid == i) .* currentWeight .* cfg.unitinmm) / energy(i);
-    end
+energy = accumarray(validDetId(:), validDetWeight(:), [idNum 1], @sum, 0)'; 
+% --- 计算吸光度 (Absorbance) ---
+absorbance = -log(energy / cfg.nphoton);
+% 处理 energy 为 0 的情况，避免 log(0) = -Inf
+absorbance(energy == 0) = Inf; % 或者可以设为 NaN
+
+% --- 计算平均路径长度 (detPath) ---
+% 初始化 detPath 为 numMedia x idNum
+detPath = zeros(numMedia, idNum);
+detPathWeightedSum = zeros(numMedia, idNum); % 存储加权路径之和
+
+% 计算加权路径长度: ppath .* detWeight (在有效光子子集上操作)
+weightedPPath = validPPathData .* validDetWeight; % 结果是 numMedia x numValidPhotons
+
+% 对每个介质层，使用 accumarray 计算加权路径之和
+for iMedia = 1:numMedia
+    % 对第 iMedia 层的加权路径 (weightedPPath(iMedia, :)) 按探测器ID求和
+    detPathWeightedSum(iMedia, :) = accumarray(validDetId(:), weightedPPath(iMedia, :), [idNum 1], @sum, 0)';
 end
 
+% 计算平均路径长度 = (加权路径之和 * unitinmm) / 总能量
+% 仅对能量大于 0 的探测器进行计算，避免除以零
+validEnergyIdx = energy > 0;
+if any(validEnergyIdx) % 只有在至少有一个探测器能量大于0时才计算
+    % 使用广播复制 energy 使其维度匹配 detPathWeightedSum
+    energyRep = repmat(energy(validEnergyIdx), numMedia, 1); % 复制有效能量
+    % 计算有效探测器的平均路径
+    detPath(:, validEnergyIdx) = (detPathWeightedSum(:, validEnergyIdx) * unitinmm) ./ energyRep;
+end
+
+% energy = zeros(1, idNum);
+% absorbance = zeros(1, idNum);
+% detPath = zeros(-1, idNum);
+% for i = 1:idNum    % 探测器编号
+% 
+%     currentWeight = detWeight(detp.detid == i);
+%     energy(i) = sum(currentWeight);
+%     absorbance(i) = -log(energy(i) / cfg.nphoton);
+%     % absorbance(i) = -log(sum(currentWeight));
+% 
+%     for j = 2:size(detp.prop, 1)
+%         ppath = detp.data(j, :)';
+%         detPath(j - 1, i) = sum(ppath(detp.detid == i) .* currentWeight .* cfg.unitinmm) / energy(i);
+%     end
+% end
+
+%% 格式化输出为表格 
 if p.Results.isexporttable
     % 添加表头
     if ~isempty(SDS)
