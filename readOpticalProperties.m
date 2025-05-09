@@ -20,6 +20,6 @@ n = table2array(opticalProperties(:, nColumns));
 
 wavelength = table2array(opticalProperties(:, 1));
 if nargout > 5
-    nphotons = table2array(opticalProperties.photon);
+    nphotons = opticalProperties.photon;
 end
 end
