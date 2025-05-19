@@ -58,7 +58,7 @@ else
 end
 
 %% 读取数据
-detWeight = mcxdetweight(detp, cfg.prop, cfg.unitinmm);  % 计算被探测到时的光子重量
+detWeight = double(mcxdetweight(detp, cfg.prop, cfg.unitinmm));  % 计算被探测到时的光子重量
 numMedia = size(detp.ppath, 2);
 validPhotonIdx = find(detp.detid > 0 & detp.detid <= idNum);
 
@@ -69,7 +69,8 @@ validDetWeight = detWeight(validPhotonIdx);
 % 提取有效光子在所有介质中的路径长度 (第2行到最后一行)
 validPPathData = detp.ppath(validPhotonIdx, :)'; % numMedia x numValidPhotons
 
-energy = accumarray(validDetId(:), validDetWeight(:), [idNum 1])'; 
+% energy = accumarray(validDetId(:), double(validDetWeight(:)), [])'; 
+energy = accumarray(detp.detid(validPhotonIdx), detWeight(validPhotonIdx), [])';
 % --- 计算吸光度 (Absorbance) ---
 absorbance = -log(energy / cfg.nphoton);
 % 处理 energy 为 0 的情况，避免 log(0) = -Inf
