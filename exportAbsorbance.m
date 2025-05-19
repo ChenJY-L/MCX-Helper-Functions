@@ -69,7 +69,8 @@ validDetWeight = detWeight(validPhotonIdx);
 % 提取有效光子在所有介质中的路径长度 (第2行到最后一行)
 validPPathData = detp.ppath(validPhotonIdx, :)'; % numMedia x numValidPhotons
 
-energy = accumarray(validDetId(:), validDetWeight(:), [idNum 1])'; 
+% energy = accumarray(validDetId(:), double(validDetWeight(:)), [])'; 
+energy = accumarray(detp.detid(validPhotonIdx), double(detWeight(validPhotonIdx)), [])';
 % --- 计算吸光度 (Absorbance) ---
 absorbance = -log(energy / cfg.nphoton);
 % 处理 energy 为 0 的情况，避免 log(0) = -Inf
